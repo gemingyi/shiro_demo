@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.shiro_jwt.dao.IRoleDAO">
+
+    <resultMap id="RoleResult" type="com.example.shiro_jwt.model.Role">
+        <id property="rid" column="rid"/>
+        <result property="roleName" column="role_name"/>
+        <result property="desc" column="desc"/>
+    </resultMap>
+
+    <select id="listRole" parameterType="String" resultType="String">
+        SELECT r.role_name
+        FROM user u
+        LEFT JOIN user_role ur ON u.uid = ur.uid
+        LEFT JOIN role r ON ur.rid = r.rid
+        WHERE u.user_name = #{userName}
+    </select>
+</mapper>

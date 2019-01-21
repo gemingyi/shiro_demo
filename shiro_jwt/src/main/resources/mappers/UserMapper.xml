@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.shiro_jwt.dao.IUserDAO">
+
+    <resultMap id="UserResult" type="com.example.shiro_jwt.model.User">
+        <id property="uid" column="uid"/>
+        <result property="userName" column="user_name"/>
+        <result property="password" column="password"/>
+        <result property="realName" column="real_name"/>
+        <result property="sflag" column="sflag"/>
+        <result property="lock" column="lock"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <resultMap id="RolesAndPermissions" type="com.example.shiro_jwt.model.User">
+        <id property="uid" column="uid"/>
+        <result property="userName" column="user_name"/>
+        <result property="password" column="password"/>
+        <result property="realName" column="real_name"/>
+        <result property="sflag" column="sflag"/>
+        <result property="lock" column="lock"/>
+        <result property="createDate" column="create_date"/>
+        <!--  角色 -->
+        <collection property="roles" ofType="com.example.shiro_jwt.model.Role">
+            <id property="rid" column="rid"></id>
+            <result property="roleName" column="role_name"></result>
+            <result property="desc" column="desc"></result>
+            <!-- 权限 -->
+            <collection property="permissions" ofType="com.example.shiro_jwt.model.Permission">
+                <id property="pid" column="pid"></id>
+                <result property="permissionName" column="permission_name"></result>
+                <result property="desc" column="desc"></result>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="findByName" parameterType="String" resultMap="UserResult">
+        SELECT *
+        FROM user
+        WHERE user_name = #{userName};
+    </select>
+
+    <select id="getAllUser" parameterType="Map" resultMap="UserResult">
+        SELECT *
+        FROM user
+        <if test="start!=null and pageSize!=null">
+            LIMIT #{start}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="getUserTotal" parameterType="Map" resultType="Integer">
+        SELECT COUNT(*)
+        FROM user
+        <if test="start!=null and pageSize!=null">
+            LIMIT #{start}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="listRolesAndPermissions" parameterType="String" resultMap="RolesAndPermissions">
+        SELECT role_name, permission_name
+		FROM user u
+		LEFT JOIN user_role ur ON u.uid = ur.uid
+		LEFT JOIN role r ON ur.rid = r.rid
+		LEFT JOIN role_permission rp ON r.rid = rp.rid
+		LEFT JOIN permission p ON rp.pid = p.pid
+		WHERE u.user_name = #{userName}
+    </select>
+
+    <insert id="doCreate" parameterType="com.example.shiro_jwt.model.User" keyProperty="uid" useGeneratedKeys="true">
+        INSERT INTO user(user_name, password, real_name, sflag, lock, create_date)
+        VALUES(#{userName}, #{password}, #{realName}, #{sflag}, #{lock}, #{createDate})
+    </insert>
+
+    <update id="doUpdate" parameterType="com.example.shiro_jwt.model.User">
+        UPDATE user
+        <set>
+            <if test="userName!=null and userName!=''">
+                user_name = #{userName},
+            </if>
+            <if test="password!=null and password!=''">
+                password = #{password},
+            </if>
+            <if test="realName!=null and realName!=''">
+                real_name = #{realName},
+            </if>
+            <if test="sflag!=null and sflag!=''">
+                sflag = #{sflag},
+            </if>
+            <if test="lock!=null and lock!=''">
+                lock = #{lock},
+            </if>
+            <if test="createDate!=null and createDate!=''">
+                create_date = #{createDate},
+            </if>
+        </set>
+        WHERE uid = #{uid}
+    </update>
+
+    <delete id="doRemove" parameterType="Integer">
+        DELETE FROM user
+        <where>
+            uid IN
+            <foreach collection="array" open="(" close=")" separator="," item="ele">
+                #{ele}
+            </foreach>
+        </where>
+    </delete>
+
+    <select id="listUserByNams" parameterType="String" resultMap="UserResult">
+        SELECT * FROM user WHERE user_name IN
+        <foreach collection="array" open="(" close=")" separator="," item="ele">
+            #{ele}
+        </foreach>
+    </select>
+
+</mapper>
