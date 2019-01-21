@@ -1,0 +1,2 @@
+1、shiro文件夹shiro+redis实现分布式session
+2、shiro_jwt文件夹shiro+jwt实现权限验证
