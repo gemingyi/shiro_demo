@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * code and msg
+ * restful返回code、msg类
  * Created by Administrator on 2018/11/13.
  */
 public enum CodeAndMsgEnum {

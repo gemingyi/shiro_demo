@@ -1,6 +1,5 @@
-package com.example.shiro.core.shiro;
+package com.example.shiro.commons;
 
-import com.example.shiro.commons.CodeAndMsgEnum;
 import org.apache.shiro.authz.UnauthenticatedException;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -10,14 +9,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.Map;
 
 /**
- * controller层 shiro异常处理类
- * Created by Administrator on 2018/10/13.
+ * Created by Administrator on 2019/1/26.
  */
 @ControllerAdvice
-public class ShiroExceptionHandler {
+public class ControllerExceptionHandler {
 
     /**
      * 未认证异常处理
+     *
      * @return
      */
     @ResponseBody
@@ -28,6 +27,7 @@ public class ShiroExceptionHandler {
 
     /**
      * 未授权异常处理
+     *
      * @return
      */
     @ResponseBody
@@ -35,15 +35,4 @@ public class ShiroExceptionHandler {
     public Map<String, Object> authorizationException() {
         return CodeAndMsgEnum.UNAUTHORIZED.result();
     }
-
-//    /**
-//     *
-//     * @return
-//     */
-//    @ResponseBody
-//    @ExceptionHandler(value = Exception.class)
-//    public Map<String, Object> exception() {
-//        return CodeAndMsgEnum.ERROR.result();
-//    }
-
 }

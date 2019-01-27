@@ -16,16 +16,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 /**
  * Created by Administrator on 2018/9/28.
  */
 @Configuration
 public class ShiroConfiguration {
-
     @Value("${shiro.redis.sessionLive}")
     private long sessionLive;
     @Value("${shiro.redis.sessionPrefix}")
@@ -36,21 +36,23 @@ public class ShiroConfiguration {
     private String cachePrefix;
 
     /**
-     * 自定义cache管理
+     * 自定义shiro cache管理
+     *
      * @return
      */
     @Bean(name = "redisCacheManager")
-    public RedisCacheManager redisCacheManager(@Qualifier("jedisConnectionFactory")JedisConnectionFactory jedisConnectionFactory) {
+    public RedisCacheManager redisCacheManager(@Qualifier("redisTemplate") RedisTemplate redisTemplate) {
         RedisCacheManager redisCacheManager = new RedisCacheManager();
         //cache过期时间及前缀
         redisCacheManager.setCacheLive(cacheLive);
         redisCacheManager.setCacheKeyPrefix(cachePrefix);
-        redisCacheManager.setJedisConnectionFactory(jedisConnectionFactory);
+        redisCacheManager.setRedisTemplate(redisTemplate);
         return redisCacheManager;
     }
 
     /**
      * 凭证匹配器（密码加密）
+     *
      * @return
      */
     @Bean(name = "hashedCredentialsMatcher")
@@ -64,7 +66,8 @@ public class ShiroConfiguration {
     }
 
     /**
-     * 定义Session ID生成管理器
+     * Session ID生成管理器
+     *
      * @return
      */
     @Bean(name = "sessionIdGenerator")
@@ -74,22 +77,24 @@ public class ShiroConfiguration {
     }
 
     /**
-     * 自定义redisSessionDAO(session存放在redis中)
+     * 自定义shiro session
+     *
      * @return
      */
     @Bean(name = "redisSessionDAO")
-    public RedisSessionDAO redisSessionDAO(JavaUuidSessionIdGenerator sessionIdGenerator, @Qualifier("jedisConnectionFactory")JedisConnectionFactory jedisConnectionFactory) {
+    public RedisSessionDAO redisSessionDAO(JavaUuidSessionIdGenerator sessionIdGenerator, @Qualifier("redisTemplate") RedisTemplate redisTemplate) {
         RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
         redisSessionDAO.setSessionIdGenerator(sessionIdGenerator);
         //session过期时间及前缀
         redisSessionDAO.setSessionLive(sessionLive);
         redisSessionDAO.setSessionKeyPrefix(sessionPrefix);
-        redisSessionDAO.setJedisConnectionFactory(jedisConnectionFactory);
+        redisSessionDAO.setRedisTemplate(redisTemplate);
         return redisSessionDAO;
     }
 
     /**
      * 自定义sessionManager
+     *
      * @return
      */
     @Bean(name = "sessionManager")
@@ -129,32 +134,28 @@ public class ShiroConfiguration {
         //退出
         filterChainDefinitionMap.put("/logout", "logout");
         //匿名访问 跳转页面
-        filterChainDefinitionMap.put("/druid/**", "anon");
         filterChainDefinitionMap.put("/userLogin", "anon");
         filterChainDefinitionMap.put("/login", "anon");
         filterChainDefinitionMap.put("/captcha", "anon");
-        //
+        //拦截所有请求
         filterChainDefinitionMap.put("/**", "authc");
-        //未认证 跳转页面
-        shiroFilterFactoryBean.setLoginUrl("/login");
-        // 认证成功  跳转页面
-//        shiroFilterFactoryBean.setSuccessUrl("/index");
-        //未授权 跳转页面
-        shiroFilterFactoryBean.setUnauthorizedUrl("/unAuth");
+        //未认证 跳转未认证页面
+        shiroFilterFactoryBean.setLoginUrl("/unAuthen");
+        //未授权 跳转未权限页面
+        shiroFilterFactoryBean.setUnauthorizedUrl("/unAuthor");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;
     }
 
-
     /**
      * 加这个本类@Values取不到值...cao
+     *
      * @return
      */
 //    @Bean(name = "lifecycleBeanPostProcessor")
 //    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
 //        return new LifecycleBeanPostProcessor();
 //    }
-
     @Bean(name = "advisorAutoProxyCreator")
     public DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator() {
         DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator = new DefaultAdvisorAutoProxyCreator();

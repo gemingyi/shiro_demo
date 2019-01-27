@@ -9,12 +9,33 @@ import java.util.Map;
  * Created by Administrator on 2017/10/11.
  */
 public interface IUserService {
+    /**
+     *
+     * @param userName
+     * @return
+     */
     User getUserByUserName(String userName);
 
+    /**
+     *
+     * @param userName
+     * @return
+     */
     Map<String, Object> getRolesAndPermissionsByUserName(String userName);
 
-    Map<String, Object> createSessionToken(String textStr);
+    /**
+     *
+     * @param sToken
+     * @param textStr
+     * @return
+     */
+    boolean checkCodeToken(String sToken, String textStr);
 
-    boolean checkSessionToken(String sToken, String textStr);
+    /**
+     *
+     * @return
+     * @throws Exception
+     */
+    Map<String, Object> generateVerificationCode() throws Exception;
 
 }

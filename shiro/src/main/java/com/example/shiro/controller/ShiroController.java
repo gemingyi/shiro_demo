@@ -9,12 +9,11 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import sun.misc.BASE64Encoder;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,12 +44,12 @@ public class ShiroController {
         //验证码
 //        String sToken = (String) params.get("sToken");
 //        String textStr = (String) params.get("textStr");
-        boolean flag = userService.checkSessionToken(userInfo.getsToken(), userInfo.getTextStr());
-        if(!flag) {
-            result.put("code", CodeAndMsgEnum.ERROR.getcode());
-            result.put("msg", "验证码错误！");
-            return result;
-        }
+//        boolean flag = userService.checkCodeToken(userInfo.getsToken(), userInfo.getTextStr());
+//        if(!flag) {
+//            result.put("code", CodeAndMsgEnum.ERROR.getcode());
+//            result.put("msg", "验证码错误！");
+//            return result;
+//        }
         try {
             subject.login(token);
             result.putAll(ResponseEntity.responseSuccess(subject.getSession().getId()));
@@ -75,36 +74,32 @@ public class ShiroController {
 
     /**
      * 生成验证码
+     *
      * @return
      */
     @RequestMapping("/captcha")
     @ResponseBody
     public Map captcha() throws IOException {
-        // 生成文字验证码
-        String text = producer.createText();
-        // 生成图片验证码
-        ByteArrayOutputStream outputStream = null;
-        BufferedImage image = producer.createImage(text);
-
-        outputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "jpg", outputStream);
-        // 对字节数组Base64编码
-        BASE64Encoder encoder = new BASE64Encoder();
-        // 生成captcha的token
-        Map<String, Object> map = userService.createSessionToken(text);
-        map.put("img", encoder.encode(outputStream.toByteArray()));
-        return map;
+        Map result;
+        try {
+            result = userService.generateVerificationCode();
+        } catch (Exception e) {
+            result = ResponseEntity.responseError();
+        }
+        return result;
     }
+
+
 
     /**
      * 未登录，shiro应重定向到登录界面，此处返回未登录状态信息由前端控制跳转页面
      *
      * @return
      */
-    @RequestMapping(value = "/login")
+    @RequestMapping(value = "/unAuthen")
     public Object login() {
         Map result = new HashMap<>();
-        result.put("code",  CodeAndMsgEnum.UNAUTHENTIC.getcode());
+        result.put("code", CodeAndMsgEnum.UNAUTHENTIC.getcode());
         result.put("msg", CodeAndMsgEnum.UNAUTHENTIC.getMsg());
         return result;
     }
@@ -114,10 +109,10 @@ public class ShiroController {
      *
      * @return
      */
-    @RequestMapping(value = "/unAuth")
+    @RequestMapping(value = "/unAuthor")
     public Object unauth() {
         Map result = new HashMap<>();
-        result.put("code",  CodeAndMsgEnum.UNAUTHORIZED.getcode());
+        result.put("code", CodeAndMsgEnum.UNAUTHORIZED.getcode());
         result.put("msg", CodeAndMsgEnum.UNAUTHORIZED.getMsg());
         return result;
     }
