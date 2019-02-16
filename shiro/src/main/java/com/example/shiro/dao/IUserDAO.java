@@ -24,5 +24,7 @@ public interface IUserDAO {
 
     public boolean doRemove(Object[] ids);
 
+    public List<User> listUserByNams(Object[] names);
+
 
 }

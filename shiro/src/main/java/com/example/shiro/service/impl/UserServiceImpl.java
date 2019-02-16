@@ -1,5 +1,6 @@
 package com.example.shiro.service.impl;
 
+import com.example.shiro.commons.Constant;
 import com.example.shiro.dao.IUserDAO;
 import com.example.shiro.model.Permission;
 import com.example.shiro.model.Role;
@@ -7,8 +8,8 @@ import com.example.shiro.model.User;
 import com.example.shiro.service.IUserService;
 import com.example.shiro.service.abs.AbstractService;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
+import org.apache.shiro.session.mgt.SimpleSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import sun.misc.BASE64Encoder;
@@ -24,8 +25,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Service("userService")
 public class UserServiceImpl extends AbstractService implements IUserService {
-    private final long codeLive = 5;
-
     @Autowired
     RedisTemplate redisTemplate;
     @Autowired
@@ -80,13 +79,34 @@ public class UserServiceImpl extends AbstractService implements IUserService {
         BufferedImage image = producer.createImage(text);
         outputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "jpg", outputStream);
-        BASE64Encoder encoder = new BASE64Encoder();
-        map.put("img", encoder.encode(outputStream.toByteArray()));
+        //
+        map.put("img", Base64.getEncoder().encodeToString(outputStream.toByteArray()));
         //生成验证码对应的token  以token为key  验证码为value存在redis中
         String codeToken = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set(codeToken, text, codeLive, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(codeToken, text, Constant.VERIFICATION__CODE_TIME, TimeUnit.MINUTES);
         map.put("cToken", codeToken);
         return map;
     }
+
+    @Override
+    public List<User> listOnLineUser() {
+        Set setNames = redisTemplate.keys(Constant.SESSION_PREFIX + "*");
+        List list = new ArrayList<User>(setNames.size());
+        Iterator<String> iter = setNames.iterator();
+        while (iter.hasNext()) {
+            String temp = iter.next();
+            SimpleSession session = (SimpleSession) redisTemplate.opsForValue().get(temp);
+            System.out.println(session.getAttribute("currentUser"));
+            list.add(session.getAttribute("currentUser"));
+        }
+        return list;
+    }
+
+    @Override
+    public boolean removeSession(String userName) {
+        String key = Constant.SESSION_PREFIX + userName;
+        return redisTemplate.delete(key);
+    }
+
 
 }

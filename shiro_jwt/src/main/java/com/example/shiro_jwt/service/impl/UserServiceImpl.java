@@ -21,11 +21,9 @@ import java.util.stream.Collectors;
  */
 @Service("userService")
 public class UserServiceImpl extends AbstractService implements IUserService {
-
     //
     @Value("${redis.identifyingTokenExpireTime}")
     private long identifyingTokenExpireTime;
-
     //redis中jwtToken过期时间
     @Value("${redis.refreshJwtTokenExpireTime}")
     private long refreshJwtTokenExpireTime;

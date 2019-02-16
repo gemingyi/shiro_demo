@@ -1,2 +1,10 @@
-1、shiro文件夹shiro+redis实现分布式session
-2、shiro_jwt文件夹shiro+jwt实现权限验证
+项目模块介绍
+1、shiro模块为Shiro + Redis实现session管理
+2、shiro_jwt模块为Shiro + JWT实现无状态鉴权机制(token)
+
+相关问题
+使用redis实现session管理 https://blog.csdn.net/baidu_33969289/article/details/84843828
+使用redis实现cache管理 https://blog.csdn.net/baidu_33969289/article/details/86670054
+shiro整合JWT https://blog.csdn.net/baidu_33969289/article/details/86616058
+集成kaptcha验证码 https://blog.csdn.net/baidu_33969289/article/details/87473766
+

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.Map;
 
 /**
+ * controller统一异常处理
  * Created by Administrator on 2019/1/26.
  */
 @ControllerAdvice

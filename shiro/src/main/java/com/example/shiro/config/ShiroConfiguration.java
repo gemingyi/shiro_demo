@@ -124,7 +124,6 @@ public class ShiroConfiguration {
         return securityManager;
     }
 
-
     @Bean(name = "shirFilter")
     public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
@@ -133,9 +132,8 @@ public class ShiroConfiguration {
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap();
         //退出
         filterChainDefinitionMap.put("/logout", "logout");
-        //匿名访问 跳转页面
+        //可匿名访问
         filterChainDefinitionMap.put("/userLogin", "anon");
-        filterChainDefinitionMap.put("/login", "anon");
         filterChainDefinitionMap.put("/captcha", "anon");
         //拦截所有请求
         filterChainDefinitionMap.put("/**", "authc");
@@ -156,6 +154,11 @@ public class ShiroConfiguration {
 //    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
 //        return new LifecycleBeanPostProcessor();
 //    }
+
+    /**
+     * 下面2个支持controller层注解实现权限控制
+     * @return
+     */
     @Bean(name = "advisorAutoProxyCreator")
     public DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator() {
         DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator = new DefaultAdvisorAutoProxyCreator();

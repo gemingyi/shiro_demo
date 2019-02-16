@@ -3,6 +3,7 @@ package com.example.shiro.service;
 
 import com.example.shiro.model.User;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,4 +39,15 @@ public interface IUserService {
      */
     Map<String, Object> generateVerificationCode() throws Exception;
 
+    /**
+     *
+     * @return
+     */
+    List<User> listOnLineUser();
+
+    /**
+     *
+     * @return
+     */
+    boolean removeSession(String userName);
 }

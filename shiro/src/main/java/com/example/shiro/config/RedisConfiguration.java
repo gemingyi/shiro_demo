@@ -27,10 +27,10 @@ public class RedisConfiguration {
 //        template.setConnectionFactory(redisConnectionFactory);
 //        //使用Jackson2JsonRedisSerializer来序列化和反序列化redis的value值
 //        Jackson2JsonRedisSerializer serializer = new Jackson2JsonRedisSerializer(Object.class);
-//        ObjectMapper mapper = new ObjectMapper();
-//        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-//        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-//        serializer.setObjectMapper(mapper);
+//        ObjectMapper dao = new ObjectMapper();
+//        dao.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+//        dao.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+//        serializer.setObjectMapper(dao);
 //        template.setValueSerializer(serializer);
 //        //使用StringRedisSerializer来序列化和反序列化redis的key值
 //        template.setKeySerializer(new StringRedisSerializer());

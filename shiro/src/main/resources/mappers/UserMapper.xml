@@ -108,4 +108,11 @@
         </where>
     </delete>
 
+    <select id="listUserByNams" parameterType="String" resultMap="UserResult">
+        SELECT * FROM user WHERE user_name IN
+        <foreach collection="array" open="(" close=")" separator="," item="ele">
+            #{ele}
+        </foreach>
+    </select>
+
 </mapper>

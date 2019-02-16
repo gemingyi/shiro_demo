@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by Administrator on 2018/9/28.
  */
 @RestController
-@RequestMapping
 public class ShiroController {
 
     @Autowired
@@ -47,7 +47,7 @@ public class ShiroController {
 //        boolean flag = userService.checkCodeToken(userInfo.getsToken(), userInfo.getTextStr());
 //        if(!flag) {
 //            result.put("code", CodeAndMsgEnum.ERROR.getcode());
-//            result.put("msg", "验证码错误！");
+//            result.put("msg", "验证码错误、或已失效！");
 //            return result;
 //        }
         try {
@@ -78,7 +78,6 @@ public class ShiroController {
      * @return
      */
     @RequestMapping("/captcha")
-    @ResponseBody
     public Map captcha() throws IOException {
         Map result;
         try {
@@ -89,6 +88,42 @@ public class ShiroController {
         return result;
     }
 
+    /**
+     * 获取在线用户
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping("/listOnLine")
+    public Map listOnLine() throws IOException {
+        Map result;
+        try {
+            List<User> vo = userService.listOnLineUser();
+            result = ResponseEntity.responseSuccess(vo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = ResponseEntity.responseError();
+        }
+        return result;
+    }
+
+    /**
+     * 踢出用户
+     * @param userName
+     * @return
+     */
+    @RequestMapping("/kickOutUser")
+    @ResponseBody
+    public Map kickOutUser(String userName) {
+        Map result;
+        try {
+            boolean flag = userService.removeSession(userName);
+            result = ResponseEntity.responseSuccess(flag);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = ResponseEntity.responseError();
+        }
+        return result;
+    }
 
 
     /**
@@ -97,7 +132,7 @@ public class ShiroController {
      * @return
      */
     @RequestMapping(value = "/unAuthen")
-    public Object login() {
+    public Map unAuthen() {
         Map result = new HashMap<>();
         result.put("code", CodeAndMsgEnum.UNAUTHENTIC.getcode());
         result.put("msg", CodeAndMsgEnum.UNAUTHENTIC.getMsg());
@@ -110,7 +145,7 @@ public class ShiroController {
      * @return
      */
     @RequestMapping(value = "/unAuthor")
-    public Object unauth() {
+    public Map unAuthor() {
         Map result = new HashMap<>();
         result.put("code", CodeAndMsgEnum.UNAUTHORIZED.getcode());
         result.put("msg", CodeAndMsgEnum.UNAUTHORIZED.getMsg());
