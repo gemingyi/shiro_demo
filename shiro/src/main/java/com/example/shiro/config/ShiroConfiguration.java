@@ -1,9 +1,7 @@
 package com.example.shiro.config;
 
-import com.example.shiro.core.shiro.MyRealm;
-import com.example.shiro.core.shiro.MySessionManager;
-import com.example.shiro.core.shiro.RedisCacheManager;
-import com.example.shiro.core.shiro.RedisSessionDAO;
+import com.example.shiro.core.shiro.*;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
@@ -12,12 +10,14 @@ import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSource
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.filter.DelegatingFilterProxy;
 
+import javax.servlet.Filter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,6 +34,8 @@ public class ShiroConfiguration {
     private long cacheLive;
     @Value("${shiro.redis.cachePrefix}")
     private String cachePrefix;
+    @Value("${shiro.redis.kickoutPrefix}")
+    private String kickoutPrefix;
 
     /**
      * 自定义shiro cache管理
@@ -41,7 +43,7 @@ public class ShiroConfiguration {
      * @return
      */
     @Bean(name = "redisCacheManager")
-    public RedisCacheManager redisCacheManager(@Qualifier("redisTemplate") RedisTemplate redisTemplate) {
+    public RedisCacheManager redisCacheManager(RedisTemplate redisTemplate) {
         RedisCacheManager redisCacheManager = new RedisCacheManager();
         //cache过期时间及前缀
         redisCacheManager.setCacheLive(cacheLive);
@@ -82,7 +84,7 @@ public class ShiroConfiguration {
      * @return
      */
     @Bean(name = "redisSessionDAO")
-    public RedisSessionDAO redisSessionDAO(JavaUuidSessionIdGenerator sessionIdGenerator, @Qualifier("redisTemplate") RedisTemplate redisTemplate) {
+    public RedisSessionDAO redisSessionDAO(JavaUuidSessionIdGenerator sessionIdGenerator, RedisTemplate redisTemplate) {
         RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
         redisSessionDAO.setSessionIdGenerator(sessionIdGenerator);
         //session过期时间及前缀
@@ -117,18 +119,28 @@ public class ShiroConfiguration {
     public SecurityManager securityManager(SessionManager sessionManager, RedisCacheManager redisCacheManager) {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(myRealm());
-        // 自定义session管理 使用redis
         securityManager.setSessionManager(sessionManager);
-        // 自定义缓存实现 使用redis
         securityManager.setCacheManager(redisCacheManager);
         return securityManager;
     }
 
-    @Bean(name = "shirFilter")
-    public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager) {
+    @Bean(name = "kickoutSessionControlFilter")
+    public KickoutSessionControlFilter jwtFilter(SessionManager sessionManager, RedisTemplate redisTemplate) {
+        KickoutSessionControlFilter kickoutSessionControlFilter = new KickoutSessionControlFilter();
+        kickoutSessionControlFilter.setSessionManager(sessionManager);
+        kickoutSessionControlFilter.setRedisTemplate(redisTemplate);
+        kickoutSessionControlFilter.setKickoutPrefix(kickoutPrefix);
+        return kickoutSessionControlFilter;
+    }
+
+    @Bean(name = "shiroFilter")
+    public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager, KickoutSessionControlFilter kickoutSessionControlFilter) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
         shiroFilterFactoryBean.setSecurityManager(securityManager);
-        //注意过滤器配置顺序 不能颠倒
+        Map<String, Filter> filters = new HashedMap(2);
+        filters.put("kickout", kickoutSessionControlFilter);
+        shiroFilterFactoryBean.setFilters(filters);
+        //注意拦截链配置顺序 不能颠倒
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap();
         //退出
         filterChainDefinitionMap.put("/logout", "logout");
@@ -136,13 +148,27 @@ public class ShiroConfiguration {
         filterChainDefinitionMap.put("/userLogin", "anon");
         filterChainDefinitionMap.put("/captcha", "anon");
         //拦截所有请求
-        filterChainDefinitionMap.put("/**", "authc");
+        filterChainDefinitionMap.put("/**", "kickout,authc");
         //未认证 跳转未认证页面
         shiroFilterFactoryBean.setLoginUrl("/unAuthen");
         //未授权 跳转未权限页面
         shiroFilterFactoryBean.setUnauthorizedUrl("/unAuthor");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;
+    }
+
+    /**
+     * 不加这个报错
+     * @return
+     */
+    @Bean
+    public FilterRegistrationBean delegatingFilterProxy() {
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
+        DelegatingFilterProxy proxy = new DelegatingFilterProxy();
+        proxy.setTargetFilterLifecycle(true);
+        proxy.setTargetBeanName("shiroFilter");
+        filterRegistrationBean.setFilter(proxy);
+        return filterRegistrationBean;
     }
 
     /**
@@ -157,6 +183,7 @@ public class ShiroConfiguration {
 
     /**
      * 下面2个支持controller层注解实现权限控制
+     *
      * @return
      */
     @Bean(name = "advisorAutoProxyCreator")

@@ -124,7 +124,7 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
         try {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.setStatus(HttpStatus.OK.value());
-            response.setContentType("application/json;charset=utf-8");
+            httpResponse.setContentType("application/json;charset=utf-8");
             httpResponse.getWriter().write("{\"code\":" + code + ", \"msg\":\"" + msg + "\"}");
         } catch (IOException e) {
             System.out.println(e.getMessage());

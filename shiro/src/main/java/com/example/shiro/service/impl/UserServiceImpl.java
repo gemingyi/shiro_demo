@@ -96,6 +96,7 @@ public class UserServiceImpl extends AbstractService implements IUserService {
         while (iter.hasNext()) {
             String temp = iter.next();
             SimpleSession session = (SimpleSession) redisTemplate.opsForValue().get(temp);
+            User user = (User) session.getAttribute("currentUser");
             System.out.println(session.getAttribute("currentUser"));
             list.add(session.getAttribute("currentUser"));
         }
